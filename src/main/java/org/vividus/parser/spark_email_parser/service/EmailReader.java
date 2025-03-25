@@ -2,7 +2,6 @@ package org.vividus.parser.spark_email_parser.service;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.sql.SparkSession;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -12,22 +11,16 @@ import java.util.Iterator;
 import java.util.List;
 
 @Component
-//@StepScope
 public class EmailReader implements ItemReader<String> {
-    /*
-    @Value("${app.inputFilePath}")
-    private String inputFilePath;
-       */
 
-    private final JavaRDD<String> rawEmailsRdd;
-    private final Iterator<String> iterator;
+    private final Iterator<String> emailIterator;
 
     @Autowired
-    public EmailReader(JavaSparkContext sc, SparkSession spark){
+    public EmailReader(JavaSparkContext sc){
 
         JavaRDD<String> linesRdd=sc.textFile("src/main/resources/emails.txt");
 
-        rawEmailsRdd=linesRdd.mapPartitions( lines -> {
+        JavaRDD<String> rawEmailsRdd=linesRdd.mapPartitions( lines -> {
             List<String> emails=new ArrayList<>();
             StringBuilder emailBuilder=new StringBuilder();
 
@@ -55,12 +48,12 @@ public class EmailReader implements ItemReader<String> {
 
             return emails.iterator();
         });
-        iterator=rawEmailsRdd.collect().iterator();
+        emailIterator=rawEmailsRdd.collect().iterator();
     }
 
 
     @Override
     public String read() throws Exception{
-        return iterator.hasNext() ? iterator.next():null;
+        return emailIterator.hasNext() ? emailIterator.next():null;
     }
 }

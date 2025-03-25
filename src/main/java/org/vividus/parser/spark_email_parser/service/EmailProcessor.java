@@ -2,6 +2,7 @@ package org.vividus.parser.spark_email_parser.service;
 
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +20,7 @@ import java.util.stream.Collectors;
 public class EmailProcessor implements ItemProcessor<String, Row> {
 
     @Override
-    public Row process(String rawEmail) throws Exception {
+    public Row process(@NotNull String rawEmail) throws Exception {
         try {
             Properties props = new Properties();
             Session session = Session.getDefaultInstance(props, null);
@@ -30,10 +31,9 @@ public class EmailProcessor implements ItemProcessor<String, Row> {
             String to = addressToString(message.getRecipients(Message.RecipientType.TO));
             String cc = addressToString(message.getRecipients(Message.RecipientType.CC));
             String bcc = addressToString(message.getRecipients(Message.RecipientType.BCC));
-
             String subject = message.getSubject();
             String date = (message.getSentDate() != null) ? message.getSentDate().toString() : "";
-            return RowFactory.create(from, to, cc, bcc, subject, date);
+            return RowFactory.create( from, to, cc, bcc, subject, date);
         }catch(Exception e){
             return RowFactory.create("","","","","","");
         }

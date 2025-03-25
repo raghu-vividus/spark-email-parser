@@ -1,5 +1,6 @@
 package org.vividus.parser.spark_email_parser.service;
 
+import lombok.RequiredArgsConstructor;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.Dataset;
@@ -16,22 +17,17 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
-//@StepScope
+@RequiredArgsConstructor
 public class EmailWriter implements ItemWriter<Row> {
 
     private final SparkSession sparkSession;
 
     private final JavaSparkContext sc;
-
-    public EmailWriter(SparkSession sparkSession, JavaSparkContext sc) {
-        this.sparkSession = sparkSession;
-        this.sc = sc;
-    }
 
     @Override
     public void write(List<? extends Row> rows) throws Exception {
@@ -69,7 +65,7 @@ public class EmailWriter implements ItemWriter<Row> {
         movePartFile(outputDir,outputCsv);
     }
 
-    private void movePartFile(String tempDir, String finalFilePath){
+    public void movePartFile(String tempDir, String finalFilePath){
         File dir = new File(tempDir);
         File[] files = dir.listFiles((d, name) -> name.startsWith("part-"));
 
@@ -78,7 +74,7 @@ public class EmailWriter implements ItemWriter<Row> {
             File finalFile = new File(finalFilePath);
 
             try {
-                Files.move(partFile.toPath(), finalFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                Files.write(finalFile.toPath(),Files.readAllBytes(partFile.toPath()), StandardOpenOption.CREATE,StandardOpenOption.APPEND);
                 System.out.println("File saved as: " + finalFilePath);
             } catch (IOException e) {
                 System.err.println("Error renaming part file: " + e.getMessage());
